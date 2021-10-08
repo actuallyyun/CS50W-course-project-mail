@@ -14,25 +14,25 @@ document.addEventListener('DOMContentLoaded', function () {
   load_mailbox('inbox')
 
   function displayView(view) {
-    if (view === 'emails-view') {
-      emailView.style.display = 'block'
-      composeView.style.display = 'none'
-      displayEmailView.style.display = 'none'
-    } else if (view === 'compose-view') {
-      emailView.style.display = 'none'
-      composeView.style.display = 'block'
-      displayEmailView.style.display = 'none'
-    } else {
-      emailView.style.display = 'none'
-      composeView.style.display = 'none'
-      displayEmailView.style.display = 'block'
+    const viewMap = {
+      'inbox': emailView,
+      'compose': composeView,
+      'email': displayEmailView
+    }
+    for (const viewKey in viewMap) {
+      if (viewKey === view) {
+        viewMap[viewKey].style.display = 'block'
+      } else {
+        viewMap[viewKey].style.display = 'none'
+      }
     }
   }
+
 
   function compose_email() {
 
     // Show compose view and hide other views
-    displayView('compose-view')
+    displayView('compose')
 
     // Clear out composition fields
     document.querySelector('#compose-recipients').value = ''
@@ -64,11 +64,8 @@ document.addEventListener('DOMContentLoaded', function () {
     })
       .then(response => response.json())
       .then(result => {
-        // Print result
-        console.log(result)
         // If successful, load the user’s sent mailbox. If not, show error msg.
         if (result.ok) {
-          console.log(`${result.message}`)
           load_mailbox('sent')
         }
         else {
@@ -81,7 +78,7 @@ document.addEventListener('DOMContentLoaded', function () {
   function load_mailbox(mailbox) {
 
     // Show the mailbox and hide other views
-    displayView('emails-view')
+    displayView('inbox')
 
     // Show the mailbox name
     document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`
@@ -134,14 +131,13 @@ document.addEventListener('DOMContentLoaded', function () {
   function view_email(email_id) {
 
     // Show email display view and hide other views
-    displayView('display-emails-view')
+    displayView('email')
 
     // make a GET request to request the email with the id
     fetch(`/emails/${email_id}`)
       .then(response => response.json())
       .then(email => {
-        // Print email
-        console.log(email)
+        // Display email
         document.querySelector('#display-email').innerHTML = `<h3>${email.subject}</h3>${email.sender} ${email.timestamp} <br>to ${email.recipients}<br><br>${email.body}`
 
       })
@@ -156,13 +152,11 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelector('#reply').addEventListener('click', function () {
       reply_email(email_id)
     })
-
-
   }
 
   function reply_email(email_id) {
     // Show compose view and hide the others
-    displayView('compose-view')
+    displayView('compose')
 
     // make a GET request to request the email with the id
     fetch(`/emails/${email_id}`)
